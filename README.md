@@ -1,4 +1,4 @@
-# SchemeSetu
+<img width="1917" height="1078" alt="image" src="https://github.com/user-attachments/assets/f7d692cf-7beb-40f4-b6ad-75cd281b47a4" /># SchemeSetu
 
 SchemeSetu helps people in India explore government schemes, compare basic eligibility, prepare an application checklist, and track their progress.
 
@@ -68,3 +68,7 @@ Keep actual credentials in Replit Secrets or a local environment file that is no
 Matching compares the profile fields the user supplies against simple scheme rules such as age, income, state, gender, occupation, student, farmer, and disability flags. Some real schemes use family-level records, official beneficiary lists, application windows, or an either/or condition that a small profile cannot represent. A match is not an approval or a promise of benefits, and an absent match does not prove ineligibility.
 
 Application-plan generation sends only the selected scheme's catalog details to Gemini. It does not send the user's profile, account password, or session token, and it is explicitly instructed not to make eligibility decisions. The Gemini credential remains server-side.
+## Project structure
+- artifacts/<frontend-folder> = frontend (React + Vite) → acts as /client
+- artifacts/<api-folder> = backend (Express) → acts as /server
+- lib/ = shared code (DB schema, validation)
