@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "SchemeSetu"
+description = "A government scheme discovery platform for people in India to find schemes matching their eligibility, understand application steps, and track applications."
+version = "1.0.0"
+id = "artifacts/scheme-setu"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24015
+
+[services.development]
+run = "pnpm --filter @workspace/scheme-setu run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/scheme-setu", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/scheme-setu/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24015"
+BASE_PATH = "/"

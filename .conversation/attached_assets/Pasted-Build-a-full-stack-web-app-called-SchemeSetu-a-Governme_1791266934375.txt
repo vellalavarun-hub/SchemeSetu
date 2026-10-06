@@ -1,0 +1,19 @@
+Build a full-stack web app called "SchemeSetu" - a Government Scheme Discovery Platform that helps Indian citizens find government schemes they are eligible for.
+
+STACK: React (Vite) + Tailwind CSS + React Router on the frontend (/client), Node.js + Express on the backend (/server), Replit PostgreSQL, JWT auth with bcrypt, Zod validation, Google Gemini via @google/genai (backend only).
+
+SECRETS: read GEMINI_API_KEY and JWT_SECRET from environment variables. Never expose keys in frontend code. Provide a .env.example.
+
+DATABASE TABLES (with createdAt/updatedAt): users, profiles (age, gender, state, annual_income, category, occupation, is_student, is_farmer, has_disability), schemes (name, category, description, benefits, min_age, max_age, max_income, gender, states, categories_allowed, occupations, documents_required JSON, apply_url), saved_schemes (user_id, scheme_id, status: saved/applied/approved/rejected, notes, ai_plan JSON).
+
+AUTH: register, login, logout, bcrypt hashing, JWT middleware protecting all private routes. Users can only access their own data.
+
+FEATURES:
+1. Protected dashboard with profile form (create/update profile, validated with Zod).
+2. GET /api/schemes/matches - rule-based eligibility matching against the user's profile in code (not AI). Return each scheme with a match score and a list of reasons matched. Support search, category filter, state filter and sorting.
+3. POST /api/schemes/:id/plan - calls Gemini from the backend with a system instruction, forces JSON output, validates with Zod: { why_eligible: string, steps: string[], documents_checklist: string[], tips: string[], warnings: string[] }. Save result in saved_schemes.ai_plan.
+4. Application tracker: full CRUD on saved_schemes (save a scheme, list, update status/notes, delete).
+5. Seed the database with 25 real central government schemes (PM-KISAN, Ayushman Bharat PM-JAY, PM Awas Yojana, PM Mudra Yojana, Sukanya Samriddhi, Atal Pension Yojana, PM Ujjwala, Stand-Up India, scholarships etc.) with realistic eligibility fields.
+6. Proper error handling, correct HTTP status codes, loading and empty states, responsive clean UI, a landing page.
+
+Add a README with architecture, schema, and AI security notes. Use clean folder structure.
