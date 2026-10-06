@@ -5,7 +5,11 @@
  * API for SchemeSetu government scheme discovery and application tracking
  * OpenAPI spec version: 0.1.0
  */
+import type { ListSchemesSort } from './listSchemesSort';
 
-export interface HealthStatus {
-  status: string;
-}
+export type ListSchemesParams = {
+q?: string;
+category?: string;
+state?: string;
+sort?: ListSchemesSort;
+};

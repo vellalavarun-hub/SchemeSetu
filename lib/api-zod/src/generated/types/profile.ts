@@ -5,7 +5,11 @@
  * API for SchemeSetu government scheme discovery and application tracking
  * OpenAPI spec version: 0.1.0
  */
+import type { ProfileInput } from './profileInput';
 
-export interface HealthStatus {
-  status: string;
-}
+export type Profile = ProfileInput & {
+  id: number;
+  user_id: number;
+  created_at: Date;
+  updated_at: Date;
+};

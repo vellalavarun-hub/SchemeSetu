@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface ApplicationPlan {
+  overview: string;
+  steps: string[];
+  documents_checklist: string[];
+  tips: string[];
+  warnings: string[];
 }

@@ -5,7 +5,9 @@
  * API for SchemeSetu government scheme discovery and application tracking
  * OpenAPI spec version: 0.1.0
  */
+import type { SavedSchemeUpdateStatus } from './savedSchemeUpdateStatus';
 
-export interface HealthStatus {
-  status: string;
+export interface SavedSchemeUpdate {
+  status?: SavedSchemeUpdateStatus;
+  notes?: string;
 }

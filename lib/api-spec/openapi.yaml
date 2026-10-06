@@ -3,13 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API for SchemeSetu government scheme discovery and application tracking
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Account registration and session management
+  - name: profile
+    description: Citizen eligibility profile
+  - name: schemes
+    description: Government scheme catalog and eligibility matching
+  - name: tracker
+    description: Saved schemes and application tracking
+  - name: dashboard
+    description: Personal dashboard summary
 paths:
   /healthz:
     get:
@@ -24,6 +34,347 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Create a SchemeSetu account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created and signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Email is already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in to an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the signed-in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get the signed-in user's eligibility profile
+      responses:
+        "200":
+          description: Profile, or null when setup has not started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: saveProfile
+      tags: [profile]
+      summary: Create or update the signed-in user's eligibility profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileInput"
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          description: Invalid profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /schemes:
+    get:
+      operationId: listSchemes
+      tags: [schemes]
+      summary: Browse the government scheme catalog
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [name, benefit]
+      responses:
+        "200":
+          description: Matching catalog entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scheme"
+  /schemes/matches:
+    get:
+      operationId: getSchemeMatches
+      tags: [schemes]
+      summary: Find schemes matching the signed-in user's profile
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [score, name, benefit]
+      responses:
+        "200":
+          description: Rule-based eligibility results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SchemeMatch"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Complete a profile to see matches
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /schemes/{id}/plan:
+    post:
+      operationId: generateSchemePlan
+      tags: [schemes]
+      summary: Generate and save an AI application plan for a scheme
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generated application plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationPlan"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Scheme not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /saved-schemes:
+    get:
+      operationId: listSavedSchemes
+      tags: [tracker]
+      summary: List the signed-in user's saved schemes
+      responses:
+        "200":
+          description: Saved schemes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedScheme"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: saveScheme
+      tags: [tracker]
+      summary: Save a scheme to the application tracker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveSchemeInput"
+      responses:
+        "201":
+          description: Scheme added to tracker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedScheme"
+        "409":
+          description: Scheme is already in the tracker
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /saved-schemes/{id}:
+    patch:
+      operationId: updateSavedScheme
+      tags: [tracker]
+      summary: Update tracker status or notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavedSchemeUpdate"
+      responses:
+        "200":
+          description: Updated tracker item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedScheme"
+        "404":
+          description: Tracker item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteSavedScheme
+      tags: [tracker]
+      summary: Remove a scheme from the tracker
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Tracker item removed
+        "404":
+          description: Tracker item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get personal dashboard totals and recent tracker activity
+      responses:
+        "200":
+          description: Personal dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +384,264 @@ components:
           type: string
       required:
         - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+    RegisterInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required: [name, email, password]
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required: [email, password]
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+      required: [id, name, email, created_at]
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+      required: [user]
+    ProfileInput:
+      type: object
+      properties:
+        age:
+          type: integer
+          minimum: 0
+          maximum: 120
+        gender:
+          type: string
+        state:
+          type: string
+          minLength: 1
+        annual_income:
+          type: number
+          minimum: 0
+        category:
+          type: string
+        occupation:
+          type: string
+        is_student:
+          type: boolean
+        is_farmer:
+          type: boolean
+        has_disability:
+          type: boolean
+      required: [age, gender, state, annual_income, category, occupation, is_student, is_farmer, has_disability]
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/ProfileInput"
+        - type: object
+          properties:
+            id:
+              type: integer
+            user_id:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+          required: [id, user_id, created_at, updated_at]
+    ProfileResponse:
+      type: object
+      properties:
+        profile:
+          oneOf:
+            - $ref: "#/components/schemas/Profile"
+            - type: "null"
+      required: [profile]
+    Scheme:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        benefits:
+          type: string
+        min_age:
+          type: [integer, "null"]
+        max_age:
+          type: [integer, "null"]
+        max_income:
+          type: [number, "null"]
+        gender:
+          type: [string, "null"]
+        states:
+          type: array
+          items:
+            type: string
+        categories_allowed:
+          type: array
+          items:
+            type: string
+        occupations:
+          type: array
+          items:
+            type: string
+        is_student:
+          type: [boolean, "null"]
+        is_farmer:
+          type: [boolean, "null"]
+        has_disability:
+          type: [boolean, "null"]
+        documents_required:
+          type: array
+          items:
+            type: string
+        apply_url:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, name, category, description, benefits, min_age, max_age, max_income, gender, states, categories_allowed, occupations, is_student, is_farmer, has_disability, documents_required, apply_url, created_at, updated_at]
+    SchemeMatch:
+      allOf:
+        - $ref: "#/components/schemas/Scheme"
+        - type: object
+          properties:
+            match_score:
+              type: integer
+              minimum: 0
+              maximum: 100
+            reasons_matched:
+              type: array
+              items:
+                type: string
+          required: [match_score, reasons_matched]
+    ApplicationPlan:
+      type: object
+      properties:
+        overview:
+          type: string
+        steps:
+          type: array
+          items:
+            type: string
+        documents_checklist:
+          type: array
+          items:
+            type: string
+        tips:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+      required: [overview, steps, documents_checklist, tips, warnings]
+    SaveSchemeInput:
+      type: object
+      properties:
+        scheme_id:
+          type: integer
+        status:
+          type: string
+          enum: [saved, applied, approved, rejected]
+        notes:
+          type: string
+      required: [scheme_id]
+    SavedSchemeUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [saved, applied, approved, rejected]
+        notes:
+          type: string
+    SavedScheme:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        scheme_id:
+          type: integer
+        status:
+          type: string
+          enum: [saved, applied, approved, rejected]
+        notes:
+          type: [string, "null"]
+        ai_plan:
+          oneOf:
+            - $ref: "#/components/schemas/ApplicationPlan"
+            - type: "null"
+        scheme:
+          $ref: "#/components/schemas/Scheme"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, scheme_id, status, notes, ai_plan, scheme, created_at, updated_at]
+    DashboardSummary:
+      type: object
+      properties:
+        profile_complete:
+          type: boolean
+        total_matches:
+          type: integer
+        saved:
+          type: integer
+        applied:
+          type: integer
+        approved:
+          type: integer
+        rejected:
+          type: integer
+        recent_saved:
+          type: array
+          items:
+            $ref: "#/components/schemas/SavedScheme"
+      required: [profile_complete, total_matches, saved, applied, approved, rejected, recent_saved]
 
